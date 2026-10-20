@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Admin | Daily Avenue</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Newsreader:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="top"><div class="w"><a class="logo" href="index.html">Daily Avenue</a><span class="date">Admin</span><button class="bt" id="out" type="button" hidden>Log out</button></div></header>
+<main class="w">
+<form class="af" id="lg"><h1>Admin login</h1>
+<label>Username<input id="u" autocomplete="username" required></label>
+<label>Password<input id="p" type="password" autocomplete="current-password" required></label>
+<p class="m" id="er" role="alert"></p><button class="bt" type="submit">Log in</button></form>
+<section id="db" hidden>
+<form class="af" id="fm"><h1>Add or edit a story</h1><input type="hidden" id="id">
+<label>Title<input id="t" required></label>
+<label>Category<select id="c"></select></label>
+<label>Summary<textarea id="x" rows="2" required></textarea></label>
+<label>Story (one paragraph per line)<textarea id="b" rows="8" required></textarea></label>
+<label>Author<input id="a" value="Newsdesk"></label>
+<div><button class="bt" type="submit">Save story</button> <button class="bt gh" type="button" id="rs">Clear form</button></div>
+<p class="m" id="st" role="status"></p></form>
+<div class="af" id="ls"></div>
+<p class="af"><button class="bt gh" id="rt" type="button">Restore sample stories</button></p>
+</section></main>
+<script src="data.js"></script>
+<script>
+const USER="admin",PASS="change-me-now",K="da_articles",S="da_session";
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const load=()=>{try{const j=JSON.parse(localStorage.getItem(K));if(Array.isArray(j))return j}catch(x){}return JSON.parse(JSON.stringify(D))};
+const save=l=>localStorage.setItem(K,JSON.stringify(l));
+const say=t=>$("#st").textContent=t;
+function clear(){$("#fm").reset();$("#id").value=""}
+function draw(){const l=load();$("#ls").innerHTML=l.map(a=>`<div class="ar"><span>${esc(a.t)}</span><span><button class="bt gh" data-e="${a.id}" type="button">Edit</button> <button class="bt gh" data-d="${a.id}" type="button">Delete</button></span></div>`).join("")||"<p>No stories yet. Add your first story above.</p>"}
+function show(){const on=sessionStorage.getItem(S)==="1";$("#lg").hidden=on;$("#db").hidden=!on;$("#out").hidden=!on;if(on)draw()}
+$("#c").innerHTML=C.map(c=>`<option>${esc(c)}</option>`).join("");
+$("#lg").onsubmit=ev=>{ev.preventDefault();if($("#u").value===USER&&$("#p").value===PASS){sessionStorage.setItem(S,"1");$("#er").textContent="";show()}else $("#er").textContent="Wrong username or password. Check both and try again."};
+$("#out").onclick=()=>{sessionStorage.removeItem(S);show()};
+$("#rs").onclick=()=>{clear();say("")};
+$("#rt").onclick=()=>{if(confirm("Replace all stories with the sample stories?")){localStorage.removeItem(K);draw();say("Sample stories restored.")}};
+$("#fm").onsubmit=ev=>{ev.preventDefault();const l=load(),id=+$("#id").value;
+const o={c:$("#c").value,t:$("#t").value.trim(),x:$("#x").value.trim(),b:$("#b").value.split("\n").map(s=>s.trim()).filter(Boolean),a:$("#a").value.trim()||"Newsdesk"};
+if(id){const i=l.findIndex(a=>a.id===id);Object.assign(l[i],o)}else l.push(Object.assign(o,{id:Math.max(0,...l.map(a=>a.id))+1,h:0,v:0,ts:Date.now()}));
+save(l);clear();draw();say("Story saved. Open the homepage to see it.")};
+$("#ls").onclick=ev=>{const b=ev.target.closest("button");if(!b)return;const l=load();
+if(b.dataset.e){const a=l.find(x=>x.id==b.dataset.e);$("#id").value=a.id;$("#t").value=a.t;$("#c").value=a.c;$("#x").value=a.x;$("#b").value=a.b.join("\n");$("#a").value=a.a;scrollTo(0,0);say("Editing “"+a.t+"”.")}
+else if(b.dataset.d&&confirm("Delete this story?")){save(l.filter(x=>x.id!=b.dataset.d));draw();say("Story deleted.")}};
+show();
+</script></body></html>
